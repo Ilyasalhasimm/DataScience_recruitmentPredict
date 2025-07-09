@@ -7,60 +7,106 @@ Original file is located at
     https://colab.research.google.com/drive/1IV55I_lieMIvYxciSsTObCIoORtC7Ydn
 """
 
-# Commented out IPython magic to ensure Python compatibility.
-# %pip install streamlit
+# prompt: buatkan saya program untuk demo pada streamlit
 
 import streamlit as st
-import numpy as np
 import pandas as pd
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+import joblib
+import numpy as np
 
-# Step 1: Load the dataset
-df = pd.read_csv('/content/drive/MyDrive/kuliah/semester 6/Data Science/final projek/dataset/recruitment_data.csv')
+# Define the path to the saved model
+model_load_path = '/content/drive/MyDrive/kuliah/semester 6/Data Science/final projek/program/svm_hiring_model.pkl' # Make sure this path is correct
 
-# Assuming your CSV has columns relevant to the Iris dataset structure,
-# replace 'feature_column_1', 'feature_column_2', 'feature_column_3', 'feature_column_4'
-# with the actual names of your feature columns and 'target_column' with your target column.
-# You might need to adjust this based on your specific dataset.
-X = df.drop('HiringDecision', axis=1)
-y = df['HiringDecision'].values # Labels (assuming 'HiringDecision' is your target column)
+# Load the trained model
+try:
+    model = joblib.load(model_load_path)
+    st.success("Model loaded successfully!")
+except FileNotFoundError:
+    st.error("Error: Model file not found. Please check the path.")
+    st.stop() # Stop the app if the model file isn't found
+
+# Function to preprocess input data
+def preprocess_input(input_data):
+    # Ensure the order and names of columns match the training data
+    # Assuming the training data columns were in the same order as the original dataframe
+    # You might need to explicitly define the order if it was changed during training
+    numerical_cols = ['YearsOfExperience', 'Salary', 'InterviewScore', 'CommunicationSkill', 'ResumeScore', 'LogicalSkill', 'PresentationSkill', 'PastPerformance', 'YearsAtCompany']
+    processed_data = pd.DataFrame([input_data], columns=numerical_cols)
+
+    # Apply the same MinMax scaling as during training
+    # Note: Ideally, you should save and load the scaler as well.
+    # For this demo, we'll create a new scaler, but this is not best practice
+    # for production. In production, always use the same scaler fitted on the training data.
+    from sklearn.preprocessing import MinMaxScaler
+    scaler = MinMaxScaler()
+    # This scaler needs to be fitted on the training data.
+    # Since we don't have the original scaler here, we'll fit on dummy data.
+    # REPLACE THIS WITH LOADING THE ACTUAL FITTED SCALER.
+    dummy_data = pd.DataFrame(np.random.rand(100, len(numerical_cols)), columns=numerical_cols)
+    scaler.fit(dummy_data) # This is just for the demo, not correct for deployment
+    # Fit on training data before deployment and load the scaler
+    # scaler = joblib.load('/path/to/saved/scaler.pkl')
+
+    processed_data[numerical_cols] = scaler.transform(processed_data[numerical_cols])
+
+    return processed_data
+
+# Streamlit App
+st.title("Hiring Decision Prediction App")
+st.write("Enter the candidate's details to predict the hiring decision.")
+
+# Input fields for candidate features
+years_experience = st.number_input("Years of Experience", min_value=0.0, max_value=50.0, value=5.0, step=0.1)
+salary = st.number_input("Salary", min_value=0.0, max_value=200000.0, value=60000.0, step=1000.0)
+interview_score = st.number_input("Interview Score", min_value=0.0, max_value=10.0, value=7.0, step=0.1)
+communication_skill = st.number_input("Communication Skill (1-10)", min_value=1.0, max_value=10.0, value=7.0, step=0.1)
+resume_score = st.number_input("Resume Score (1-10)", min_value=1.0, max_value=10.0, value=7.0, step=0.1)
+logical_skill = st.number_input("Logical Skill (1-10)", min_value=1.0, max_value=10.0, value=7.0, step=0.1)
+presentation_skill = st.number_input("Presentation Skill (1-10)", min_value=1.0, max_value=10.0, value=7.0, step=0.1)
+past_performance = st.number_input("Past Performance (1-10)", min_value=1.0, max_value=10.0, value=7.0, step=0.1)
+years_at_company = st.number_input("Years at Previous Company", min_value=0.0, max_value=30.0, value=3.0, step=0.1)
 
 
-# Step 2: Split the data into training and testing sets (80% train, 20% test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Create a dictionary from the input values
+input_data = {
+    'YearsOfExperience': years_experience,
+    'Salary': salary,
+    'InterviewScore': interview_score,
+    'CommunicationSkill': communication_skill,
+    'ResumeScore': resume_score,
+    'LogicalSkill': logical_skill,
+    'PresentationSkill': presentation_skill,
+    'PastPerformance': past_performance,
+    'YearsAtCompany': years_at_company
+}
 
-# Step 3: Initialize and train the svm classifier
-svm = SVC()
-svm.fit(X_train, y_train)
-
-# Step 4: Streamlit layout and user input for features
-st.title("Recruitment Data Prediction")
-st.write("This app predicts if a candidate will be hired based on their features.")
-
-# Input fields for the user to enter candidate features
-age = st.number_input('Age', min_value=0, max_value=100, value=25, step=1)
-experience = st.number_input('Experience (years)', min_value=0, max_value=50, value=5, step=1)
-education = st.number_input('Education Level (e.g., 1 for Bachelor, 2 for Master, etc.)', min_value=0, max_value=5, value=1, step=1)
-it_skills = st.number_input('IT Skills Score (e.g., 1-5)', min_value=1, max_value=5, value=3, step=1)
-interview_performance = st.number_input('Interview Performance Score (e.g., 1-5)', min_value=1, max_value=5, value=3, step=1)
-recruitment_strategy = st.number_input('Recruitment Strategy (e.g., 1 for A, 2 for B, etc.)', min_value=1, max_value=3, value=1, step=1)
-
-
-# Step 5: Make prediction when the user presses the "Predict" button
-if st.button('Predict Hired Status'):
-    input_data = np.array([[age, experience, education, it_skills, interview_performance, recruitment_strategy]])
+# Prediction button
+if st.button("Predict Hiring Decision"):
+    # Preprocess the input data
+    processed_input = preprocess_input(input_data)
 
     # Make prediction
-    prediction = svm.predict(input_data)
+    prediction = model.predict(processed_input)
 
-    # Display the predicted status
-    predicted_status = "Hired" if prediction[0] == 1 else "Not Hired" # Assuming 1 means hired and 0 means not hired
-    st.write(f"The predicted status is: {predicted_status}")
+    # Display the prediction
+    st.subheader("Prediction:")
+    if prediction[0] == 'Hired':
+        st.success("The candidate is predicted to be HIRED.")
+    else:
+        st.error("The candidate is predicted to be NOT HIRED.")
 
-    # Evaluate and display model accuracy
-    y_pred = svm.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    st.write(f"Model Accuracy: {accuracy * 100:.2f}%")
+st.sidebar.header("About")
+st.sidebar.write("""
+This app uses a trained Support Vector Machine (SVM) model to predict
+whether a candidate will be hired based on various recruitment factors.
+The model was trained on a dataset from Kaggle.
+""")
+
+# Instructions on how to run the app
+st.sidebar.header("How to Run")
+st.sidebar.write("""
+1. Make sure you have Streamlit installed (`pip install streamlit`).
+2. Save this code as a Python file (e.g., `app.py`).
+3. Ensure the model file (`svm_hiring_model.pkl`) is in the specified path.
+4. Run the app from your terminal using: `streamlit run app.py`
+""")
