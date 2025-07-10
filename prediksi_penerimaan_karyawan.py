@@ -6,7 +6,11 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 # Step 1: Load the recruitment dataset
-df = st.file_uploader("Upload file CSV", type="csv")
+uploaded_file = st.file_uploader("Upload file CSV", type="csv")
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.write("Data yang diupload:")
+    st.dataframe(df)
 X = df.drop('HiringDecision', axis=1)
 y = df['HiringDecision']
 
