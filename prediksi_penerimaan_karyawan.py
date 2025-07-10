@@ -6,7 +6,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 # Step 1: Load the recruitment dataset
-df = pd.read_csv(r'dataset\recruitment_data.csv')
+df = pd.read_csv('recruitment_data.csv')
 X = df.drop('HiringDecision', axis=1)
 y = df['HiringDecision']
 
