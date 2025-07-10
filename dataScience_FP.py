@@ -7,6 +7,11 @@ from sklearn.metrics import accuracy_score
 
 st.title("Hiring Decision Prediction App")
 st.write("Upload dataset dan masukkan data kandidat untuk memprediksi apakah akan diterima atau tidak.")
+# Tombol unduh dataset
+dataset_url = "https://drive.google.com/file/d/10gBXi7-waVW-TDMt2GOVZNp6bWkCVFnH/view?usp=drive_link"  # Ganti link ini sesuai kebutuhan
+
+if st.button("📥 Unduh Dataset Di Sini"):
+    st.markdown(f"<meta http-equiv='refresh' content='0; url={dataset_url}'>", unsafe_allow_html=True)
 
 # Step 1: Upload & Load the recruitment dataset
 uploaded_file = st.file_uploader("Upload file CSV", type="csv")
